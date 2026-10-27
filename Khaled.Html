@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام اختبارات قواعد البيانات - م/ خالد علي العواضي</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Cairo', sans-serif; }
+    </style>
+</head>
+<body class="bg-slate-900 text-slate-100 min-h-screen flex flex-col justify-between">
+
+    <!-- Header -->
+    <header class="bg-slate-800 border-b border-slate-700 shadow-md py-4 px-6">
+        <div class="max-w-4xl mx-auto flex justify-between items-center">
+            <div>
+                <h1 class="text-xl font-bold text-blue-400">بنك أسئلة قواعد البيانات</h1>
+                <p class="text-xs text-slate-400">إعداد وتطوير: م/ خالد علي العواضي</p>
+            </div>
+            <div id="timer" class="hidden bg-slate-700 px-4 py-2 rounded-lg text-yellow-400 font-semibold text-sm">
+                ⏳ الوقت المتبقي: <span id="time-left">--:--</span>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-3xl w-full mx-auto px-4 py-8 flex-grow">
+
+        <!-- Start Screen -->
+        <div id="start-screen" class="bg-slate-800 border border-slate-700 rounded-2xl p-8 text-center shadow-xl">
+            <h2 class="text-2xl font-bold mb-4 text-white">اختبار مادة قواعد البيانات الشامل</h2>
+            <p class="text-slate-300 mb-6 text-sm leading-relaxed">
+                يحتوي هذا الاختبار على أسئلة شاملة (صح وخطأ واختيار من متعدد) مستخرجة من بنك الأسئلة المعتمد.
+                اختر عدد الأسئلة واضغط ابدأ لاختبار مستواك ومعرفة درجاتك فوراً.
+            </p>
+
+            <div class="mb-6 flex flex-col sm:flex-row justify-center gap-4">
+                <div class="text-right">
+                    <label class="block text-xs text-slate-400 mb-1">عدد الأسئلة:</label>
+                    <select id="num-questions" class="bg-slate-700 border border-slate-600 rounded-lg px-4 py-2 text-white focus:outline-none focus:border-blue-500">
+                        <option value="10">10 أسئلة (سريع)</option>
+                        <option value="25">25 سؤالاً</option>
+                        <option value="50">50 سؤالاً</option>
+                        <option value="100">100 سؤال</option>
+                        <option value="all">كل الأسئلة (شامل)</option>
+                    </select>
+                </div>
+            </div>
+
+            <button onclick="startExam()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-8 py-3 rounded-xl transition shadow-lg text-lg">
+                ابدأ الاختبار الآن 🚀
+            </button>
+        </div>
+
+        <!-- Quiz Screen -->
+        <div id="quiz-screen" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-6 sm:p-8 shadow-xl">
+            <div class="flex justify-between items-center mb-6 text-sm text-slate-400 border-b border-slate-700 pb-3">
+                <span>السؤال <span id="current-q-num" class="text-white font-bold">1</span> من <span id="total-q-num" class="text-white font-bold">10</span></span>
+                <span id="q-type-badge" class="bg-blue-900 text-blue-300 px-3 py-1 rounded-full text-xs font-semibold">صح وخطأ</span>
+            </div>
+
+            <h3 id="question-text" class="text-lg sm:text-xl font-semibold mb-6 text-white leading-relaxed"></h3>
+
+            <div id="options-container" class="space-y-3 mb-8">
+                <!-- Options will be injected dynamically -->
+            </div>
+
+            <div class="flex justify-between items-center">
+                <button id="prev-btn" onclick="prevQuestion()" class="bg-slate-700 hover:bg-slate-600 text-slate-300 px-5 py-2 rounded-xl text-sm transition hidden">
+                    السابق
+                </button>
+                <button id="next-btn" onclick="nextQuestion()" class="bg-blue-600 hover:bg-blue-500 text-white px-6 py-2 rounded-xl font-bold transition ml-auto">
+                    التالي
+                </button>
+            </div>
+        </div>
+
+        <!-- Result Screen -->
+        <div id="result-screen" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-8 text-center shadow-xl">
+            <h2 class="text-3xl font-black mb-2 text-white">نتيجة الاختبار</h2>
+            <p class="text-slate-400 text-sm mb-6">إعداد: م/ خالد علي العواضي</p>
+
+            <div class="inline-flex justify-center items-center bg-slate-900 border-4 border-blue-500 rounded-full w-36 h-36 mb-6 shadow-inner">
+                <span id="score-display" class="text-4xl font-black text-blue-400">0/0</span>
+            </div>
+
+            <p id="feedback-message" class="text-lg font-semibold mb-8 text-slate-200"></p>
+
+            <div class="flex justify-center gap-4">
+                <button onclick="restartExam()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold px-6 py-3 rounded-xl transition shadow-lg">
+                    إعادة الاختبار 🔄
+                </button>
+                <button onclick="reviewAnswers()" class="bg-slate-700 hover:bg-slate-600 text-white font-bold px-6 py-3 rounded-xl transition">
+                    مراجعة الإجابات 📋
+                </button>
+            </div>
+        </div>
+
+        <!-- Review Screen -->
+        <div id="review-screen" class="hidden bg-slate-800 border border-slate-700 rounded-2xl p-6 shadow-xl">
+            <h2 class="text-2xl font-bold mb-4 text-white text-center">مراجعة الإجابات</h2>
+            <div id="review-list" class="space-y-4 max-h-96 overflow-y-auto pr-2 mb-6 text-right">
+                <!-- Review items -->
+            </div>
+            <button onclick="backToResult()" class="bg-blue-600 hover:bg-blue-500 text-white font-bold w-full py-3 rounded-xl transition">
+                العودة لنتيجة الاختبار
+            </button>
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 border-t border-slate-700 py-4 text-center text-xs text-slate-400">
+        جميع الحقوق محفوظة © 2026 - نظام اختبارات قواعد البيانات | اعداد م/ خالد علي العواضي
+    </footer>
+
+    <script>
+        // عينة من الأسئلة الشاملة المستخرجة من بنك الأسئلة
+        const bankData = [
+            { q: "تعاني أنظمة الملفات التقليدية من مشاكل عديدة في إدارة البيانات مثل صعوبة الاسترجاع والإدارة رغم أنها مثلت نقلة نوعية مقارنة بالأنظمة اليدوية.", type: "True/False", options: ["صح", "خطأ"], answer: "صح" },
+            { q: "نظام إدارة قواعد البيانات (DBMS) يعد وسيطاً بين المستخدمين وقاعدة البيانات ويوفر واجهات للتعريف والاستعلام والتحديث.", type: "True/False", options: ["صح", "خطأ"], answer: "صح" },
+            { q: "تعتمد قواعد البيانات الهرمية على مبدأ التسلسل الهرمي في العمل وتسمح بوجود أكثر من أب للبيانات في نفس المستوى.", type: "True/False", options: ["صح", "خطأ"], answer: "خطأ" },
+            { q: "قواعد البيانات الشبكية ظهرت بسبب عدم قدرة النظام الهرمي على تمثيل العلاقات من النوع متعدد إلى متعدد (Many-to-Many).", type: "True/False", options: ["صح", "خطأ"], answer: "صح" },
+            { q: "تتميز الأنظمة الهرمية والشبكية بأنها أنظمة ساكنة (Static) لأن السجلات مربوطة ببعضها بشكل فيزيائي عبر المؤشرات (Pointers).", type: "True/False", options: ["صح", "خطأ"], answer: "صح" },
+            { q: "الربط في الأنظمة العلائقية يتم فيزيائياً عن طريق المؤشرات وليس بالمحتوى أو مطابقة قيم البيانات.", type: "True/False", options: ["صح", "خطأ"], answer: "خطأ" },
+            { q: "يقصد بحالة قاعدة البيانات (Database State) البيانات المخزنة في قاعدة البيانات في بحث معين في أي وقت والتي تتغير بعمليات الحذف والإضافة والتعديل.", type: "True/False", options: ["صح", "خطأ"], answer: "صح" },
+            { q: "المفتاح الأعظم (Super Key) هو أصغر مجموعة من الصفات التي يمكن أن تميز الصف في الجدول عن بقية الصفوف دون وجود أي صفة مكررة.", type: "True/False", options: ["صح", "خطأ"], answer: "خطأ" },
+            { q: "المفتاح المرشح (Candidate Key) يجب ألا يحتوي على قيم مكررة وألا يحتوي على قيم فارغة (Null).", type: "True/False", options: ["صح", "خطأ"], answer: "صح" },
+            { q: "المفتاح الأجنبي (Foreign Key) هو صفة أو صفات تشير إلى مفتاح رئيسي في جدول آخر ويستخدم كمفتاح ربط بين الجدولين.", type: "True/False", options: ["صح", "خطأ"], answer: "صح" },
+            { q: "ما هي المشكلة الأساسية التي أدت إلى ظهور قواعد البيانات وبرامج نظم إدارتها بدلاً من نظم الملفات التقليدية؟", type: "MCQ", options: ["كثرة مشاكل إدارة الملفات للبيانات المخزنة وصعوبة البحث والإضافة والحذف والتعديل", "ارتفاع أسعار أجهزة الحاسوب بشكل كبير", "عدم توفر مساحات تخزين كافية على القرص الصلب", "سرعة تلف وسائط التخزين الضوئية"], answer: "كثرة مشاكل إدارة الملفات للبيانات المخزنة وصعوبة البحث والإضافة والحذف والتعديل" },
+            { q: "ما هو دور نظام إدارة قواعد البيانات (DBMS) بالنسبة للمستخدم وقاعدة البيانات؟", type: "MCQ", options: ["يخزن البيانات في ملفات مستقلة ومعزولة", "يعمل كوسيط بين المستخدمين وقاعدة البيانات ويوفر واجهة للتعريف والاستعلام والتحديث", "يققوم بحذف قاعدة البيانات نهائياً عند امتلاء الذاكرة", "يقتصر دوره على طباعة التقارير الورقية فقط"], answer: "يعمل كوسيط بين المستخدمين وقاعدة البيانات ويوفر واجهة للتعريف والاستعلام والتحديث" },
+            { q: "ما هو المفتاح الرئيسي (Primary Key) في قواعد البيانات؟", type: "MCQ", options: ["هو المفتاح المستخدم فقط لعمليات البحث عن أسماء العملاء", "هو المفتاح الذي تم اختياره من مجموعة المفاتيح المرشحة ليكون محدداً لكل صف في الجدول ويجب ألا تتكرر قيمه", "هو عمود يحتوي على قيم متكررة وفارغة بشكل دائم", "هو جدول فرعي مرتبط بجدول رئيسي"], answer: "هو المفتاح الذي تم اختياره من مجموعة المفاتيح المرشحة ليكون محدداً لكل صف في الجدول ويجب ألا تتكرر قيمه" },
+            { q: "ما هي العبارة المستخدمة لاسترجاع البيانات من قاعدة البيانات في لغة SQL؟", type: "MCQ", options: ["Insert", "Update", "Select", "Drop"], answer: "Select" },
+            { q: "أي من الكائنات التالية يعتبر الوحدة الأساسية التي تخزن فيها البيانات ويتكون من السجلات والحقول؟", type: "MCQ", options: ["المنظور View", "الفهرس Index", "الجدول Table", "التسلسل Sequence"], answer: "الجدول Table" }
+        ];
+
+        let currentQuestions = [];
+        let currentIndex = 0;
+        let userAnswers = [];
+
+        function startExam() {
+            const countVal = document.getElementById('num-questions').value;
+            let shuffled = [...bankData].sort(() => 0.5 - Math.random());
+
+            if (countVal === 'all') {
+                currentQuestions = shuffled;
+            } else {
+                currentQuestions = shuffled.slice(0, parseInt(countVal));
+            }
+
+            currentIndex = 0;
+            userAnswers = new Array(currentQuestions.length).fill(null);
+
+            document.getElementById('start-screen').classList.add('hidden');
+            document.getElementById('quiz-screen').classList.remove('hidden');
+            document.getElementById('total-q-num').innerText = currentQuestions.length;
+
+            loadQuestion();
+        }
+
+        function loadQuestion() {
+            const q = currentQuestions[currentIndex];
+            document.getElementById('current-q-num').innerText = currentIndex + 1;
+            document.getElementById('question-text').innerText = q.q;
+            document.getElementById('q-type-badge').innerText = q.type === 'True/False' ? 'صح وخطأ' : 'اختيار من متعدد';
+
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+
+            q.options.forEach((opt, idx) => {
+                const isSelected = userAnswers[currentIndex] === opt;
+                const btn = document.createElement('button');
+                btn.className = `w-full text-right px-5 py-3 rounded-xl border transition text-sm sm:text-base flex items-center justify-between ${
+                    isSelected
+                        ? 'bg-blue-600 border-blue-500 text-white font-bold shadow'
+                        : 'bg-slate-700/50 border-slate-600 text-slate-200 hover:bg-slate-700'
+                }`;
+                btn.innerHTML = `<span>${opt}</span> <span class="w-4 h-4 rounded-full border border-slate-400 flex items-center justify-center ${isSelected ? 'bg-white border-white' : ''}">${isSelected ? '•' : ''}</span>`;
+                btn.onclick = () => selectOption(opt);
+                optionsContainer.appendChild(btn);
+            });
+
+            document.getElementById('prev-btn').classList.toggle('hidden', currentIndex === 0);
+            document.getElementById('next-btn').innerText = currentIndex === currentQuestions.length - 1 ? 'إنهاء الاختبار ✓' : 'التالي ←';
+        }
+
+        function selectOption(option) {
+            userAnswers[currentIndex] = option;
+            loadQuestion();
+        }
+
+        function nextQuestion() {
+            if (currentIndex < currentQuestions.length - 1) {
+                currentIndex++;
+                loadQuestion();
+            } else {
+                finishExam();
+            }
+        }
+
+        function prevQuestion() {
+            if (currentIndex > 0) {
+                currentIndex--;
+                loadQuestion();
+            }
+        }
+
+        function finishExam() {
+            let score = 0;
+            currentQuestions.forEach((q, idx) => {
+                if (userAnswers[idx] === q.answer) {
+                    score++;
+                }
+            });
+
+            document.getElementById('quiz-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+
+            const percentage = Math.round((score / currentQuestions.length) * 100);
+            document.getElementById('score-display').innerText = `${score} / ${currentQuestions.length}`;
+
+            let msg = "";
+            if (percentage >= 90) msg = "ممتاز جداً! أداء رائع ومحترف في قواعد البيانات 🌟";
+            else if (percentage >= 75) msg = "جيد جداً! مستوى متقدم وممتاز 👍";
+            else if (percentage >= 50) msg = "مقبول، يمكنك مراجعة الأسئلة لتحسين النتيجة 📚";
+            else msg = "تحتاج لمزيد من المراجعة والتركيز في بنك الأسئلة 💪";
+
+            document.getElementById('feedback-message').innerText = `${msg} (النسبة: ${percentage}%)`;
+        }
+
+        function restartExam() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('start-screen').classList.remove('hidden');
+        }
+
+        function reviewAnswers() {
+            document.getElementById('result-screen').classList.add('hidden');
+            document.getElementById('review-screen').classList.remove('hidden');
+
+            const listContainer = document.getElementById('review-list');
+            listContainer.innerHTML = '';
+
+            currentQuestions.forEach((q, idx) => {
+                const userAns = userAnswers[idx] || "لم تتم الإجابة";
+                const isCorrect = userAns === q.answer;
+
+                const item = document.createElement('div');
+                item.className = `p-4 rounded-xl border text-sm ${isCorrect ? 'bg-emerald-950/30 border-emerald-800' : 'bg-rose-950/30 border-rose-800'}`;
+                item.innerHTML = `
+                    <p class="font-bold text-white mb-2">س${idx+1}: ${q.q}</p>
+                    <p class="text-xs mb-1"><span class="text-slate-400">إجابتك:</span> <span class="${isCorrect ? 'text-emerald-400 font-bold' : 'text-rose-400 font-bold'}">${userAns}</span></p>
+                    <p class="text-xs"><span class="text-slate-400">الإجابة النموذجية:</span> <span class="text-blue-400 font-bold">${q.answer}</span></p>
+                `;
+                listContainer.appendChild(item);
+            });
+        }
+
+        function backToResult() {
+            document.getElementById('review-screen').classList.add('hidden');
+            document.getElementById('result-screen').classList.remove('hidden');
+        }
+    </script>
+</body>
+</html>
